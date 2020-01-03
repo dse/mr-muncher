@@ -1,0 +1,327 @@
+(*********************************************************************************************)
+
+(*  INCLUDE2.P -- by Darren Embry -- Tuesday, July 23, 1991
+    Contains procedures/functions used exclusively by GAME.P and MUNCHER.PAS  *)
+
+type string12 = string [12];
+
+function boardfile (board : integer) : string12;
+{ file name on which the data for a game board is stored, current board number given }
+var st : string12;
+begin
+  str (board,st);
+  while length (st) < 3 do st := '0' + st;
+  st := boardfilename + '.' + st;
+  boardfile := st;
+end;
+
+PROCEDURE ClearHighScores;
+{ resets all high scores to zero }
+VAR T : Integer;
+BEGIN
+  for t := 1 to 10 do with TopTen [t] do
+    begin Score := 0; Round := 0; Name  := 'Mr. Muncher'; end;
+end;
+
+PROCEDURE ClearHighScoreScreen;
+{ procedure used in "Reset High Scores" to clear them off the screen }
+VAR Buffer : ARRAY [1..7920] OF Byte;
+BEGIN
+  TurnClearScreen (FromSide,65,319-FromSide,173,2,Buffer);
+END;
+
+PROCEDURE LoadHighScores;
+{ load the high scores from the appropriate data file }
+VAR F : File;
+BEGIN
+  assign (f,HighScoresDataFile); reset (f,1);
+  if ioresult = 0
+    then blockread (f,topten,sizeof(topten))
+    else ClearHighScores;
+  close (f);
+END;
+
+PROCEDURE SaveHighScores;
+{ save the high scores to the appropriate data file }
+VAR F : File;
+BEGIN
+  Assign (F,HighScoresDataFile); Rewrite (F,1);
+  BlockWrite (F,TopTen,SizeOf(TopTen)); Close (F);
+END;
+
+PROCEDURE LoadConfiguration;
+{ loads the configuration settings from the disk file }
+VAR F : File;
+BEGIN
+  WITH Configuration DO
+    BEGIN
+      FadeSpeed := 0;
+      ScrollWorks := TRUE;
+      ScrollSpeed := 2;
+      AnimationSpeed := 0;
+      Smoothness := 2;
+    END;
+  {$I-}
+  Assign (F,ConfigurationFile);
+  Reset (F,SizeOf (Configuration));
+  IF IOresult = 0 THEN BlockRead (F,Configuration,1);
+  Close (F);
+  {$I+}
+END;
+
+PROCEDURE SaveConfiguration;
+{ Saves the configuration settings to a disk file }
+VAR F : File;
+BEGIN
+  Assign (F,ConfigurationFile);
+  Rewrite (F,SizeOf (Configuration));
+  BlockWrite (F,Configuration,1);
+  Close (F);
+END;
+
+PROCEDURE IntroductionScreen;
+{ my clever little intro screen ("EmbryWare Enterprises presents...") }
+BEGIN
+  IF Configuration.ScrollWorks
+    THEN
+      BEGIN
+        LoadScreen (IntroductionScreenFile);
+        BounceDown;
+        PressAnyKey;
+        JerkUp;
+        ClearScreen;
+      END
+    ELSE
+      BEGIN
+        LoadScreenWithFade (IntroductionScreenFile);
+        PressAnyKey;
+        FadeScreen (0);
+      END;
+END;
+
+PROCEDURE InstructionScreen;
+{ the help screen that is called up from the main menu }
+BEGIN
+  IF Configuration.ScrollWorks
+    THEN
+      BEGIN
+        LoadScreen (InstructionsScreenFile);
+        ScrollDown;
+        PressAnyKey;
+        ScrollUp;
+        FillScreen (0);
+      END
+    ELSE
+      BEGIN
+        LoadScreenWithFade (InstructionsScreenFile);
+        PressAnyKey;
+        FadeScreen (0);
+      END;
+END;
+
+PROCEDURE SharewareScreen;
+{ that screen telling you about shareware before you exit to DOS. }
+BEGIN
+  IF Configuration.ScrollWorks
+    THEN
+      BEGIN
+        LoadScreen (ExitToDosScreenFile);
+        BounceDown;
+        PressAnyKey;
+        JerkUp;
+      END
+    ELSE
+      BEGIN
+        LoadScreenWithFade (ExitToDosScreenFile);
+        PressAnyKey;
+        FadeScreen (0);
+      END;
+  TextMode (C80);
+  SaveConfiguration;
+END;
+
+PROCEDURE MainMenu (VAR Option : Integer);
+{ the little program that inputs a user's selection from the main menu, using arrow keys or
+  their ASCII counterparts (Esc,P,I,E,H,R) to select the item.  The smooth selection bar
+  movement is here. }
+VAR Ch : Char; L,PointLine1,PointLine2 : Integer;
+CONST Minimum = 112; Maximum = 183; Options = 6; FromSide = 88;
+  PROCEDURE Decrement (VAR A : Integer);
+  BEGIN A := A-1; IF A < Minimum THEN A := Maximum; END;
+  PROCEDURE Increment (VAR A : Integer);
+  BEGIN A := A+1; IF A > Maximum THEN A := Minimum; END;
+  PROCEDURE FastLine (X1,Y,X2 : Integer);
+  VAR Screen : ARRAY [0..16383] OF Byte ABSOLUTE $B800:0;
+    A1,A2,B : Integer;
+  BEGIN
+    A1 := (Y AND 1) SHL 13 + (Y SHR 1) * 80 + (X1 SHR 2);
+    A2 := (Y AND 1) SHL 13 + (Y SHR 1) * 80 + (X2 SHR 2);
+    FOR B := A1 TO A2 DO Screen [B] := Screen [B] XOR $FF;
+  END;
+  PROCEDURE MainMenuScreen;
+  VAR L : Integer;
+  BEGIN
+    IF Configuration.ScrollWorks
+      THEN
+        BEGIN
+          LoadScreen (MainMenuScreenFile);
+          FOR L := PointLine1 TO PointLine2 DO FastLine (FromSide-4,L,323-FromSide);
+          SlowDown;
+        END
+      ELSE
+        BEGIN
+          LoadScreenWithFade (MainMenuScreenFile);
+          FOR L := PointLine1 TO PointLine2 DO FastLine (FromSide-4,L,323-FromSide);
+        END;
+  END;
+  PROCEDURE UpArrow;
+  VAR L : Integer;
+  BEGIN
+    Option := Option - 1; IF Option < 1 THEN Option := Options;
+    FOR L := 1 TO 12 DO
+      BEGIN
+        WaitForRetrace;
+        FastLine (FromSide-4,PointLine2,323-FromSide);
+        Decrement (PointLine2); Decrement (PointLine1);
+        FastLine (FromSide-4,PointLine1,323-FromSide);
+      END;
+  END;
+  PROCEDURE DownArrow;
+  VAR L : Integer;
+  BEGIN
+    Option := Option + 1; IF Option > Options THEN Option := 1;
+    FOR L := 1 TO 12 DO
+      BEGIN
+        WaitForRetrace;
+        FastLine (FromSide-4,PointLine1,323-FromSide);
+        Increment (PointLine2); Increment (PointLine1);
+        FastLine (FromSide-4,PointLine2,323-FromSide);
+      END;
+  END;
+BEGIN
+  Option := 1; PointLine1 := Minimum; PointLine2 := Minimum+11; MainMenuScreen;
+  REPEAT
+    Ch := UpCase (ReadKey);
+    CASE Ch OF
+      #0 : BEGIN
+             Ch := UpCase (ReadKey);
+             CASE Ch OF
+               'H','K' : UpArrow;
+               'M','P' : DownArrow;
+             END;
+             Ch := #0;
+           END;
+    END;
+  UNTIL Ch IN [#27,#13,' ','P','I','E','H','R'];
+  IF NOT (Ch = #13)
+    THEN Option := Pos (Ch,#27+'PIEHR'); { finds CH in that string }
+  IF Configuration.ScrollWorks
+    THEN JerkUp
+    ELSE FadeScreen (0);
+END;
+
+PROCEDURE HighScores;
+{ raw procedure to display the high scores on the current graphics screen }
+VAR P : Integer; St : String [255];
+BEGIN
+  FOR P := 1 TO 10 DO
+    WITH TopTen [P] DO
+      BEGIN
+        Str (P:0,St); St := St + '.';
+        DisplayString (St,FromSide+15,54+P*11,0,2,Right_);
+        DisplayString (Name,FromSide+25,54+P*11,1,2,Left_);
+        Str (Score:0:0,St);
+        DisplayString (St,274-FromSide,54+P*11,3,2,Right_);
+        Str (Round:0,St);
+        DisplayString (St,319-FromSide,54+P*11,3,2,Right_);
+      END;
+END;
+
+{ procedures, respectively, to save and load the current graphics screen when displaying the
+  current high scores }
+
+PROCEDURE SaveHighScoreScreen; BEGIN SaveScreen (HighScoresScreenFile); END;
+PROCEDURE LoadHighScoreScreen; BEGIN LoadScreen (HighScoresScreenFile); END;
+
+PROCEDURE SeeHighScores;
+{ the procedure called from the main menu to look at the current high scores and prompt the
+  user to "strike any key when done looking..." }
+BEGIN
+  IF Configuration.ScrollWorks
+    THEN
+      BEGIN
+        LoadHighScoreScreen;
+        DisplayString ('Strike any key when done looking...',160,190,3,0,Center_);
+        SlowDown;
+        PressAnyKey;
+        JerkUp
+      END
+    ELSE
+      BEGIN
+        LoadScreenWithFade (HighScoresScreenFile);
+        DisplayString ('Strike any key when done looking...',160,190,3,0,Center_);
+        PressAnyKey;
+        FadeScreen (0);
+      END;
+END;
+
+PROCEDURE ResetHighScores;
+{ the procedure called from the main menu to ask the user if he's sure he wants to delete all
+  the high scores.  Saves both the newly changed graphics screen and the data file. }
+VAR Ch : Char;
+BEGIN
+  IF Configuration.ScrollWorks
+    THEN
+      BEGIN
+        LoadHighScoreScreen;
+        DisplayString ('Are you SURE about this (Y/N)?',160,190,3,0,Center_);
+        SlowDown;
+      END
+    ELSE
+      BEGIN
+        LoadScreenWithFade (HighScoresScreenFile);
+        DisplayString ('Are you SURE about this (Y/N)?',160,190,3,0,Center_);
+      END;
+  REPEAT Ch := ReadKey; Ch := UpCase (Ch); UNTIL Ch IN ['N','Y'];
+  FillRegion (0,190,319,199,0);
+  IF Ch = 'Y' THEN
+    BEGIN
+      ClearHighScores;
+      ClearHighScoreScreen;
+      HighScores;
+      SaveHighScores;
+      SaveHighScoreScreen;
+    END;
+  IF Configuration.ScrollWorks
+    THEN JerkUp
+    ELSE FadeScreen (0);
+END;
+
+PROCEDURE Initialize;
+{ initialization procedure }
+BEGIN
+  LoadConfiguration;
+  FadeScreen (0);
+  GraphColorMode;
+  Palette (0);
+  LoadIcons;
+  LoadHighScores;
+END;
+
+{ -- the next four functions are used in calculating previous and next values
+     of game board cursor coordinates:
+
+     px (previous x) - x-coordinate after left arrow cursor key pressed
+     py (previous y) - y-coordinate after up arrow cursor key pressed
+     nx (next x) - x-coordinate after right arrow cursor key pressed
+     ny (next y) - y-coordinate after down arrow cursor key pressed
+
+     These functions allow the cursor and the walls to "wrap" around the
+     board editor or game board screen. -- }
+
+function px (cx : integer) : integer; begin px := 1 + ((cx + columns - 2) mod columns); end;
+function nx (cx : integer) : integer; begin nx := (cx mod columns) + 1; end;
+function py (cy : integer) : integer; begin py := 1 + ((cy + rows - 2) mod rows); end;
+function ny (cy : integer) : integer; begin ny := (cy mod rows) + 1; end;
+
+

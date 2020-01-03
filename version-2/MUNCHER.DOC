@@ -1,0 +1,350 @@
+ÛÜ     ÜÛ ÛßßßßÜ	  ÛÜ	 ÜÛ Û	 Û ÛÜ	  Û ÜßßßßÜ Û	Û Ûßßßßß ÛßßßßÜ
+Û ßÜ Üß Û Û    Û	  Û ßÜ Üß Û Û	 Û Û ßÜ   Û Û	   ÛÜÜÜÜÛ ÛÜÜÜ	 Û    Û
+Û   ß	Û ÛßßÛß 	  Û   ß   Û Û	 Û Û   ßÜ Û Û	   Û	Û Û	 ÛßßÛß
+Û	Û Û   ßÜ ÛÛ	  Û	  Û ßÜÜÜÜß Û	 ßÛ ßÜÜÜÜß Û	Û ÛÜÜÜÜÜ Û   ßÜ
+
+	       Version 0.0 -- Beta Test Version -- 28 March 1992
+	(in other words, I NEED RESPONSE FROM THE USERS OF THIS PROGRAM)
+
+		   graphics, and programming by Darren Embry
+
+		  Copyright (C) 1992 by ReaperWare Enterprises
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³   R E A D   T H I S	D O C U M E N T A T I O N   B E F O R E   U S I N G   ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+This program is being distributed in the public domain.  This means that you
+are allowed to make copies of this program and pass them around to your friends
+and upload it to bulletin board systems, as long as none of the files are
+modified, all of the files are copied, and there are no charges made in the
+program.  THIS SOFTWARE IS ABSOLUTELY FREE, AND YOU DO NOT HAVE TO REGISTER IT
+WITH THE AUTHOR.
+
+If you have any questions, comments, complaints, or suggestions, or you
+encountered some problems on your particular computer, or you found a bug or
+two in my program, then please drop me a line at:
+
+				  Darren Embry
+			      2404 Portland Avenue
+			   Louisville, Ky. 40212-1038
+		   (enclose an S.A.S.E. for a personal reply)
+
+If you know what this is, you can send E-mail to me at the following
+Bitnet/Internet address:
+
+			     CL262447@ULKYVM.BITNET
+
+		 ...and PLEASE describe your error in detail...
+
+This program has 32 boards.  The official (non-beta) version will contain 80
+fun-packed rounds of excitement.  I need creations from the users of this game,
+though.  USE THE BOARD EDITOR!  You can send your ideas (you have to draw them
+on graph paper or something, though) to either address above.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³		   W H A T   F I L E S	 A R E	 T H E R E ?		      ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+The distribution diskette (or archive file) should contain ALL of the following
+files:
+
+README	.COM		A simple program to display instructions for first-time
+			players on how to load up the program and read the
+			documentation.
+MUNCHER .COM (or .EXE)  The program file, which contains board editor and game.
+MCONFIG .COM (or .EXE)	This program allows you to change the configuration
+			(details later)
+MIMAGES .CGA		Bitmap data file for animated sprites and other small
+			images.
+MINTRO	.CGA		Bitmap data file for the introductory title screen (the
+			one that says "EmbryWare Enterprises Presents...").
+MMENU	.CGA		Bitmap data file for the main menu screen.
+
+
+
+
+MHELP   .CGA            Bitmap data file for the help screen, which displays
+			brief instructions and what keys you press to play the
+			game.
+MSCORES .CGA		Bitmap data file for the high score screen.  This file
+			does not contain the actual data for the high scores,
+			but only the data for a screen displaying the high
+			scores.
+MSCORES .DAT		File that contains the data for each high score in the
+			top ten ranks.
+MEDITOR .CGA		Bitmap data file for the board editor environment
+			screen (displays what keys to use).
+MEXIT	.CGA		Bitmap data file for my "shareware" screen that appears
+			before exiting to DOS.
+MBOARD	.???		Files that contain the data for each game board.  The
+       (.001 to .032)   three-digit number corresponding to the round number is
+			the three-character extension (replaces ???; for
+			example, M-BOARD.024).	All board numbers from 1 to 32
+			inclusive should be included on the distribution disk
+			or archive file.
+MGAME	.CGA		Bitmap data file for the game playing environment
+			screen (everything but the game board, the creatures,
+                        and the scores, etc.).
+MUNCHER .DOC		The documentation that you are reading right now.
+
+If not all of the files are present, then the file or disk you received is NOT
+an official distribution version of Mr. Muncher.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³		   C O M P U T E R   R E Q U I R E M E N T S		      ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+To run Mr. Muncher, you will need the following:
+
+	- an IBM PC, XT, AT, PCjr, PS/2, PS/1 (ha ha ha ha), or compatible
+	  computer running PC-DOS or MS-DOS version 2.0 or higher.  Please note
+	  that this program is painfully slow on PCjr's and older PC's and a
+	  microprocessor speed of 8 MHz or greater is recommended.
+	- 128 KB of RAM or greater
+	- a CGA, EGA, MCGA, or VGA graphics card or compatible
+	- general knowledge of DOS so that you can start up the program (duh).
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³	     H O W   T O   S T A R T   U P   T H E   P R O G R A M	      ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+Load up DOS on your computer.  When you see the A> prompt (or B> or C>, etc.)
+place the Mr. Muncher Program Disk in the current drive, type "MUNCHER" at
+the DOS prompt, and press Enter.  When the title screen appears, press any key
+and the main menu will appear.	You will learn how to use the main menu in the
+next section.
+
+			      USING THE MAIN MENU
+
+To select an option from the main menu, you can use the up and down cursor
+arrow keys to select an option.  When the "highlight bar" is on your option,
+pressing the "Enter" key will make the computer perform that option.
+
+You may also press the key corresponding to your option in the menu (example:
+press "I" to see the instructions).
+
+Only the main menu options that I feel need explanations will be detailed
+below.
+
+
+
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³			P L A Y I N G	T H E	G A M E 		      ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+When you press "P" (or move the highlight bar and press <Enter>), you have the
+chance to select the number of players or to cancel and return to the main
+menu.  Press "1" to select one player, "2" to select two players, or <Esc> to
+return to the main menu.
+
+				RULES FOR PLAYING
+
+MR. MUNCHER is basically a clone of Pac-Man.  The object is to eat all the
+little dots, or FOOD PELLETS, on the board in order to go to the next round,
+without getting destroyed by GHOSTS wandering about the board in a somewhat
+random fashion.  The "bigger" dots, or ENERGY PELLETS, give you a limited
+amount of time to eat the ghosts and get points.  Beware of blinking ghosts,
+which are about to change back to their dangerous colors.  BONUS THINGIES,
+which appear from time to time, can give you points or an extra man, also.
+
+			     KEYS TO PLAY THE GAME
+
+Movement of Mr. Muncher:	cursor arrow keys on numeric keypad
+Pause:				P
+Toggle sound effects:		S
+Options menu and Help Screen:	F1
+Exit back to main menu:         Esc
+
+				    SCORING
+
+Food pellets:	10 points
+Energy pellets: 100 points
+Ghosts: 	200, 400, and 800 for each ghost, and 1600 thereafter.
+Bonuses:	cherry		= 100 points
+		strawberry	= 500 points
+		banana		= 1000 points
+		extra man	= no points, but you do get an extra man.
+
+You get an extra man at 10,000 points and every 30,000 points thereafter.
+
+				  OPTIONS MENU
+
+When you press the F1 key, you will get a brief help screen describing what
+keys you can use.  There is also an options menu that allows you to change some
+of the settings for your game.	An explanation of each option (if necessary) is
+given below:
+
+Toggle sound: S -- this option simply allows you to turn the sound effects on
+or off.
+
+Set game speed: G -- this option lets you change the speed of your program on
+your particular computer.  The number you type in can be a number between 1 and
+32767.	1 makes the game run fast, and 32,767 makes it run slow.  The speed
+depends on the type of the computer you are using, so I wouldn't recommend
+using 32,767 on a slower 286 or an 8088.
+
+Set smoothness: M -- this option allows you to change the "smoothness" of the
+game animation to a number between 1 and 4.  This setting affects the game
+speed, and it may help to set this number to 3 or 4 when running on an 8088.
+On a 286, I would recommend setting this value to 1 or 2, and on a 386 or
+higher, setting this value to 1 still gives fine animation.  But it's up to you
+to experiment and see which values are best for "smoothness" and "game speed."
+
+
+
+
+
+For you graphically knowledgeable, this number is porportional to the number of
+pixels that each sprite moves. The game will move faster when the smoothness
+level is increased.
+
+Return to game: Esc -- self-explanatory.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³			T H E	B O A R D   E D I T O R 		      ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+This option allows you to create new boards if you are bored with the old ones
+or simply just want to try something new for a change.	You can have as many
+(or as few) ghosts on the board as you want, move the initial position of the
+player (where it starts when you lose a man or you're on a new board), and tell
+the computer where to put walls, food and energy pellets, etc.
+
+When this option is selected, board number 1 will be loaded up automatically.
+See that blinking object?  That's a cursor.  You move it using the cursor
+control keys.  But what's all that crap on the left-hand side of the screen?
+That's your quick reference.  An explanation follows:
+
+Move: arrow keys -- The cursor control keys allow you to move the cursor around
+the board.  If you're on one of the edges, it will wrap around to the opposite
+edge for you.  The cursor is used to place or erase items on the board, which
+will be explained later, in the section entitled, "The Building Blocks Of A
+Game Board".
+
+Scan boards: PgUp,PgDn -- This option allows you to quickly load up the
+previous or next game board.  If the current board has been changed, the
+computer will ask you if you want to save it first.  PgUp loads up the previous
+board (example: from board 2 to board 1), and PgDn loads up the next game board
+(example: from board 1 to board 2).  If you're on board number 1 and you press
+PgUp, you will load up board number 100, because you can store 100 game boards
+on a disk.  If you press PgDn and you're on board number 100, it will load up
+baord number 1.
+
+Load board: L -- This option allows you to select what board number you wish to
+load up.  Pressing <Enter> without typing in anything will re-load the current
+game board.  If the current board has been changed, the computer will ask you if
+you want to save it first.
+
+Save board: S -- This option allows you to select what board number you wish to
+save.  Pressing <Enter> without typing in anything will save the current game
+board.	If you select another board number, the computer will display that
+board and ask you if you wish to replace that board with the one you're saving.
+If you press "Y" you will overwrite the old board.  If you press "N", that
+board will remain on the screen to be edited.  If you press <Esc>, the old
+board will be re-loaded on the screen to be edited.
+
+Clear board: C -- This option allows you to clear the current board number.
+Just to be safe, you will be asked if you are sure you want to.
+
+Exchange: X -- This option allows you to exchange the game boards for two
+board numbers.	Pressing <Esc> when inputting for a board number will go back
+to the board editor.  Pressing <Enter> without typing in anything will assume
+the current board number.  Entering the same number for both board numbers will
+do nothing.
+
+Exit: Esc -- This option allows you to exit the board editor and go back to the
+main menu.  If any changes were made to the board, the computer will ask you if
+you want to save it.  If you press <Esc>, the changes will not be saved and you
+will go back into the board editor.
+
+
+
+
+                                BOARD EDITING KEYS
+
+Player: "1" -- When you press the "1" key, the cursor will be where the
+player's initial position will be at the start of the game, or after you get
+killed.  If the player is already there, the computer will ask you if you want
+to move it.
+
+Enemy: "2" -- Pressing the "2" key will place a ghost at the cursor position.
+If there are more than ten (10) ghosts on the board, you will receive an error
+message.
+
+Walls: "3" -- The wall sections are the building blocks for the maze that Mr.
+Muncher must travel to.  Pressing the "3" key will place one of these blocks
+(wall sections) at the cursor.	Wall sections placed next to eachother will be
+automatically "connected."  A screen full of wall sections, for example, will
+look more like a grid.
+
+Food: "4" -- Pressing the "4" key will place a food pellet at the cursor
+positon.
+
+Energy: "5" -- Pressing the "5" key will place an energy pellet at the cursor
+positon.
+
+Eraser: "0" -- Pressing the "0" key will erase whatever is at the cursor.
+
+When you press "1","2","4","5", or "0" when the cursor is on a wall section,
+that wall section will be erased first, and the connections will disappear.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³		  USING THE MCONFIG.COM CONFIGURATION PROGRAM		      ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+The MCONFIG.COM configuration program is used to set the speed of screen
+"fades" and tells the computer whether or not to use those neat scrolling
+tricks.  A "fade" is when the contents of the screen are loaded up or blanked
+out gradually.	The program can also change the speed of the scrolling that you
+can perform on certain monitors and allow you to turn it off.  "Scrolling" is
+when the contents are smoothly scrolled up or down (this entails a few effects)
+on the screen.
+
+THESE SCREEN SCROLLING TRICKS WILL NOT WORK ON SOME MONITORS, ESPECIALLY VGA
+MONITORS, SO PLEASE MAKE SURE TO RUN THIS PROGRAM BEFORE STARTING UP THE GAME.
+
+To load up the configuration program, simply type "MCONFIG" at the DOS prompt,
+and press the Enter key.
+
+The MAIN MENU gives you three options:
+
+1.  Type in "1" and press Enter to change the speed of or test screen "fades."
+2.  Type in "2" and press Enter to change the speed of or test screen
+    "scrolling."
+3.  Type in "9" and press Enter to exit to DOS.
+
+When you type in "1" at the main menu, the SCREEN FADE SETUP MENU gives you
+three options:
+
+1.  Type in "1" and press Enter to change the fading speed.  This number can be
+    any number from 0 to 32,767.  0 represents the fastest screen fading speed
+    and 32,767 the slowest.
+2.  Type in "2" and press Enter to test a screen fade at the currently set
+    fading speed, which is displayed on the bottom line of the screen.
+3.  Type in "9" and press Enter to return to the MAIN MENU.
+
+
+
+
+When you type in "2" at the main menu, the SCREEN SCROLLING SETUP MENU gives
+you three options:
+
+1.  Type in "1" and press Enter to change the scrolling speed.  This number can
+    be anywhere from 0 to 255, although I recommend between 1 and 8.  1 is the
+    fastest and 8 the slowest.
+2.  Type in "2" and press Enter to test a screen scrolling at the currently set
+    scrolling speed.  This option asks you whether the scrolling alone cleared
+    the screen (screen scrolling is ON) or the contents were scrolled back on
+    and had to be "faded off" (screen scrolling is OFF; fades are used).
+3.  Type in "9" and press Enter to return to the MAIN MENU.
+
+When this menu is up, the screen scrolling speed and status switch (ON/OFF) is
+displayed at the bottom line of the screen.
+
+					     typed by:	Darren Embry
+							Saturday 28 March 1992
+							7:52 p.m.
+
+

@@ -1,0 +1,73 @@
+(**********************************************************************************************
+
+    SCROLLS.P -- by Darren Embry -- Sunday, February 24, 1991
+    This file contains some utilities that make some graphics screens scroll smoothly up
+    and down, and other scrolling tricks.  *)
+
+{ ----- THESE PROCEDURES ARE USED BY MY SCROLLING ROUTINES ----- }
+
+VAR _6845 : Word ABSOLUTE $0000:$0463;
+  { port address of graphics adapter (example: $03D4 for CGA) }
+
+{ -- wait until retrace; we can update the video display -- }
+
+PROCEDURE WaitForRetrace;
+BEGIN
+  WHILE (Port [_6845+6] AND 8) = 1 DO; WHILE (Port [_6845+6] AND 8) = 0 DO;
+END;
+
+{ -- a specified number of lines can be displayed on the screen.  Multiply
+     L by two to get the number of lines. -- }
+
+PROCEDURE SeeLines (L : Integer);
+VAR P : Integer;
+BEGIN
+  FOR P := 1 TO Configuration.ScrollSpeed DO WaitForRetrace;
+  P := (100 - L) * 40; Port [_6845] := 6; Port [_6845+1] := L;
+  PortW [_6845] := $0C OR (P AND $FF00);
+  PortW [_6845] := $0D OR ((P SHL 8) AND $FF00);
+END;
+
+{ ----- HERE ARE THE SCROLLING ROUTINES THEMSELVES ----- }
+
+PROCEDURE ScrollDown; VAR L : Integer;
+{ -- smooth scrolling down of the graphics screen currently displayed -- }
+BEGIN FOR L := 0 TO 100 DO SeeLines (L); END;
+
+PROCEDURE ScrollUp; VAR L : Integer;
+{ -- smoothly scroll the screen up until you see nothingness -- }
+BEGIN FOR L := 100 DOWNTO 0 DO SeeLines (L); END;
+
+PROCEDURE BounceDown;
+{ -- a neat algorithm to "bounce" the screen into visibility -- }
+VAR speed,crash,line,time : integer;
+BEGIN
+  line := 0; speed := 0; crash := MaxInt; time := 0;
+  repeat
+    if time = 0 then speed := speed + 1;
+    time := (time + 1) mod 3; line := line + speed; seelines (line);
+    if line >= 100 then
+      begin line := 100; crash := speed - 1; speed := -crash; time := 1; end;
+  until crash <= 0;
+END;
+
+PROCEDURE JerkUp;
+{ -- "jerks" the graphics screen into invisibility -- }
+VAR line,time,speed : Integer;
+begin
+  line := 100; speed := 0; time := 0;
+  repeat
+    if time = 0 then speed := speed - 1;
+    time := (time + 1) mod 3; line := line + speed; seelines (line);
+    if line <= 0 then line := 0;
+  until line = 0;
+end;
+
+PROCEDURE SlowDown;
+{ -- a soft landing of the screen -- }
+const arraysize = 24;
+  l : array [1..arraysize] of byte = (100,99,98,97,95,93,91,88,85,82,78,74,70,65,60,55,49,43,37,30,23,16,8,0);
+var t : byte;
+begin for t := arraysize downto 1 do seelines (l [t]); end;
+
+

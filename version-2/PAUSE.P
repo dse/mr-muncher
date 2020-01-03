@@ -1,0 +1,41 @@
+(*********************************************************************************************)
+
+(*  PAUSE.P -- by Darren Embry -- Saturday, October 12, 1991
+    This is the pause function for the video game (GAME.P).  Every video game with decent
+    graphics should come with a really neat pause screen. *)
+
+procedure pause (minx,miny,maxx,maxy : integer);
+{ displays the "pause" message }
+var
+  wx1,wy1,wx2,wy2,x,y,x1,y1,x2,y2 : integer;
+  saved : array [1..107] of integer; ch : char;
+begin
+  savegraphwindow (wx1,wy1,wx2,wy2);
+  setgraphwindow (0,0,319,199);
+  fillregion (minx,190,maxx,199,0);
+  x := (minx+maxx) div 2; y := (miny+maxy) div 2;
+  displaystring ('Press any key to continue...',x,190,1,0,center_);
+  x1 := x-24; y1 := y-7;  x2 := x+25; y2 := y+8;
+  get (saved,x1,y1,x2,y2); fillregion (x1,y1,x2,y2,0);
+  displaystring ('PAUSE',x+1,y1+4,1,0,center_);
+  y := 0;
+  for x := 0 to 7 do
+    begin
+      case y of
+        0 : colortable (0,1,0,0);
+        1 : colortable (2,1,0,0);
+        2 : colortable (3,1,0,0);
+      end;
+      rectangle (x1+x,y1+x,x2-x,y2-x,-1); y := (y+1) mod 3;
+    end;
+  colortable (3,1,0,2);
+  while keypressed do ch := readkey;
+  repeat fillregion (x1,y1,x2,y2,-1); delay (80);
+    until keypressed;
+  while keypressed do ch := readkey;
+  colortable (0,1,2,3);
+  put (saved,x1,y1);
+  setgraphwindow (wx1,wy1,wx2,wy2);
+end;
+
+

@@ -1,0 +1,57 @@
+(* DATATYPE.P -- by Darren Embry -- Saturday, October 26, 1991
+
+	 This file cibtatubs certaub data types and constants used by MUNCHER, MAKER,
+	 and MAKER2.PAS *)
+
+CONST
+	FromSide = 24;
+	MaximumBoards = 32;
+	Columns = 25; Rows = 22;
+	__eraser = 0; __player = 1;
+	__enemy  = 2; __dot 	 = 3;
+	__energy = 4; __wall	 = 5;
+	__gate	 = 6;
+	MaxFontWidth = 8;
+	MaxFontHeight = 10;
+
+TYPE
+	String255 = String [255];
+	String30 = String [30];
+	Icon8 = ARRAY [0..10] OF Integer;
+	Icon10 = ARRAY [0..12] OF Integer;
+	IconScore = ARRAY [0..51] OF Integer;
+	Direction = (Still,Left,Right,Up,Down);
+	GhostType = (Dangerous,Edible,Flash1,Flash2);
+	BoardType = ARRAY [1..Columns,1..Rows] OF Byte;
+	IconsRecord = RECORD
+		_100,_200,_400,_500,_800,_1000,_1600 : IconScore;
+		_Wall : ARRAY [False..True,False..True,False..True,False..True] OF Icon10;
+		_Creature : ARRAY [Left..Down,0..2] OF Icon8;
+		_Ghost : ARRAY [Dangerous..Flash2] OF Icon8;
+		_DeadCreature : ARRAY [0..7] OF Icon8;
+		_Dot,_Energizer,_Cherry,_ExtraMan : Icon8;
+		_Strawberry,_Banana : Icon10;
+		_Letter : ARRAY [#32..#126] OF Icon10;
+		_Dummy : Byte;
+		END;
+	ScoreRecord = RECORD
+		Score : Real;
+		Round : Integer;
+		Name : String30;
+		END;
+	ConfigType = RECORD
+		FadeSpeed : Integer;
+		ScrollWorks : Boolean;
+		ScrollSpeed : Byte;
+		AnimationSpeed : Integer;
+		Smoothness : Integer;
+		SoundEffects : Boolean;
+		END;
+
+VAR
+	Icons : IconsRecord;
+	Wait : Integer;
+	TopTen : ARRAY [1..10] OF ScoreRecord;
+	WindowX1,WindowY1,WindowX2,WindowY2 : Integer;
+	Configuration : ConfigType;
+

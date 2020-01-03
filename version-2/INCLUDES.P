@@ -1,0 +1,454 @@
+(*********************************************************************************************)
+
+(*  INCLUDES.P -- by Darren Embry -- Friday, July 12, 1991
+    Contains procedures and functions used by MAKER, MAKER2, and MUNCHER.PAS *)
+
+PROCEDURE Swap (VAR A,B : Integer); VAR T : Integer;
+{ swaps two integers }
+BEGIN T := A; A := B; B := T; END;
+
+PROCEDURE Order (VAR A,B : Integer);
+{ put two integers in numerical order, A being lower than B }
+BEGIN IF A > B THEN Swap (A,B); END;
+
+procedure pressanykey;
+{ program goes on after the user presses any key }
+var ch : char;
+begin
+  ch := ReadKey; while keypressed do ch := readkey;
+end;
+
+PROCEDURE SetGraphWindow (X1,Y1,X2,Y2 : Integer);
+{ Same as GraphWindow, except you can access the window coordinates }
+BEGIN
+  Order (X1,X2); Order (Y1,Y2);
+  WindowX1 := X1; WindowY1 := Y1; WindowX2 := X2; WindowY2 := Y2;
+  GraphWindow (X1,Y1,X2,Y2);
+END;
+
+PROCEDURE SaveGraphWindow (VAR X1,Y1,X2,Y2 : Integer);
+{ procedure to get graphics window coordinates }
+BEGIN X1 := WindowX1; Y1 := WindowY1; X2 := WindowX2; Y2 := WindowY2; END;
+
+PROCEDURE FillRegion (X1,Y1,X2,Y2,Color : Integer);
+{ draw a filled rectangle within the specified area }
+VAR WX1,WY1,WX2,WY2 : Integer;
+BEGIN
+  SaveGraphWindow (WX1,WY1,WX2,WY2);
+  Order (X1,X2); Order (Y1,Y2);
+  SetGraphWindow (X1+WX1,Y1+WY1,X2+WX1,Y2+WY1);
+  FillScreen (Color);
+  SetGraphWindow (WX1,WY1,WX2,WY2);
+END;
+
+PROCEDURE Rectangle (X1,Y1,X2,Y2,COlor : Integer);
+{ draw a box using specified coordinates }
+BEGIN
+  order (X1,X2); order (Y1,Y2);
+  Draw (X1,Y1+1,X1,Y2-1,Color); Draw (X1,Y2,X2,Y2,Color);
+  Draw (X2,Y2-1,X2,Y1+1,Color); Draw (X2,Y1,X1,Y1,Color);
+END;
+
+PROCEDURE Get (VAR Buffer; X1,Y1,X2,Y2 : Integer);
+{ simplifies GetPic, uses upper-left-hand coordinates }
+VAR WX1,WY1,WX2,WY2 : Integer;
+BEGIN
+  SaveGraphWindow (WX1,WY1,WX2,WY2);
+  Order (X1,X2); Order (Y1,Y2);
+  SetGraphWindow (0,0,319,199);
+  GetPic (Buffer,X1+WX1,Y1+WY1,X2+WX1,Y2+WY1);
+  SetGraphWindow (WX1,WY1,WX2,WY2);
+END;
+
+PROCEDURE Put (VAR Buffer; X,Y : Integer);
+{ simplifies PutPic same way as Get simplifies GetPic }
+BEGIN
+  PutPic (Buffer,X,Y-1+MEMW [Seg(Buffer):Ofs(Buffer)+4]);
+END;
+
+PROCEDURE HalfToneBox (X1,Y1,X2,Y2,FG,BG,Spread : Integer);
+{ similar to FillRegion, but one good thing about it...
+  instead of a solid box, the edges are "softened" using halftoned lines.  SPREAD is the width
+  of the "soft" edges of the box.  FG is the foreground, BG the background }
+VAR A : Integer;
+
+  PROCEDURE DrawHalfToneBox (X1,Y1,X2,Y2,Color1,Color2 : Integer;
+                         Coefficient : Real);
+  VAR R,SizeX,SizeY,Size,X,Y,A,Offset : Integer;
+  BEGIN
+    IF Coefficient > 0.50 THEN
+      BEGIN
+        Swap (Color1,Color2);
+        Coefficient := 1.0 - Coefficient;
+      END;
+    Rectangle (X1,Y1,X2,Y2,Color2);
+    SizeX := X2-X1; SizeY := Y2-Y1;
+    Size := (SizeX+SizeY) * 2;
+    R := Random (Size);
+    FOR A := 1 TO Trunc (Coefficient * Size) DO
+      BEGIN
+        Offset := (R + Trunc (A / Coefficient)) MOD Size;
+        IF Offset < SizeX
+          THEN BEGIN Y := Y1; X := X1 + Offset; END
+          ELSE IF Offset < (SizeX + SizeY)
+            THEN BEGIN X := X2; Y := Y1 + Offset - SizeX; END
+            ELSE IF Offset < (SizeX*2 + SizeY)
+              THEN BEGIN Y := Y2; X := X2 - Offset + SizeX + SizeY; END
+              ELSE BEGIN X := X1; Y := Y2 - Offset + SizeX*2 + SizeY; END;
+        Plot (X,Y,Color1);
+      END;
+  END;
+
+BEGIN
+  Order (X1,X2); Order (Y1,Y2);
+  FillRegion (X1,Y1,X2,Y2,FG);
+  FOR A := 0 TO Spread-1 DO
+    DrawhalfToneBox (X1+A,Y1+A,X2-A,Y2-A,FG,BG,(A+1)/(Spread+1));
+END;
+
+PROCEDURE LoadScreen (FileName : String255);
+{ load a CGA graphics screen from a data file }
+type
+  bufferptr = ^buffertype;
+  buffertype = array [1..2,1..8192] of byte;
+VAR
+  screen : buffertype absolute $b800:0;
+  Buffer : bufferptr;
+  DataFile : File;
+BEGIN
+  ClearScreen;
+  SeeLines (100);
+  new (buffer);
+  fillchar (buffer^,sizeof(buffertype),0);
+  Assign (DataFile,FileName);
+  Reset (DataFile,8000);
+  IF IOresult = 0
+    THEN
+      BEGIN
+        BlockRead (DataFile,Buffer^[1],1);
+        BlockRead (DataFile,Buffer^[2],1);
+        Close (DataFile);
+      END
+    ELSE
+      begin
+        Close (DataFile);
+        Assign (DataFile,FileName);
+        Reset (DataFile,8000);
+        IF IOresult = 0
+          THEN
+            BEGIN
+              BlockRead (DataFile,Buffer^[1],1);
+              BlockRead (DataFile,Buffer^[2],1);
+              Close (DataFile);
+            END
+          ELSE
+            BEGIN
+              Close (DataFile);
+              TextMode (C80);
+              Writeln ('File not found:  '+FileName);
+              dispose (buffer);
+              Halt;
+            END;
+      end;
+  seelines (0);
+  move (buffer^[1],screen[1],8000);
+  move (buffer^[2],screen[2],8000);
+  dispose (buffer);
+END;
+
+PROCEDURE SaveScreen (FileName : String255);
+{ save the current CGA graphics screen to a data file }
+VAR
+  Buffer : ARRAY [1..2,1..8192] OF Byte ABSOLUTE $B800:0;
+  DataFile : File;
+BEGIN
+  Assign (DataFile,FileName); Rewrite (DataFile,1);
+  IF IOresult = 0
+    THEN
+      BEGIN
+        BlockWrite (DataFile,Buffer[1],8000);
+        BlockWrite (DataFile,Buffer[2],8000);
+      END;
+  Close (DataFile);
+END;
+
+{---------------------------------------------------------------------------------------------}
+
+{   This is the really cool portion of this file.  My very own text displaying routines which
+    use GetPic/PutPic images for each ASCII character from 32 to 126.  Here's the format GetPic
+    and PutPic use:
+
+    The first six bytes of the buffer constitute a header containing three integers.
+
+        First integer -- contains 2 for 320 x 200 resolution, 1 for 640 x 200
+        Second integer -- width of the image, in pixels
+        Third integer -- height of the image, in pixels
+
+    The size of the buffer is as follows:
+
+        320 x 200, 4 color -- Size = ((Width + 3) DIV 4) * Height + 6
+        640 x 200, 2 color -- Size = ((Width + 7) DIV 8) * Height + 6
+
+    where:
+
+        Width = Abs (X2-X1+1)   and   Height = Abs (Y2-Y1+1)
+
+    These text displaying routines can use ColorTable to display the text in any of four colors,
+    are capable of left, center, or right justification, and there's even a seperate procedure
+    to put the text into my "HalfToneBox". }
+
+FUNCTION SizeStr (St : String255) : integer;
+{ Determines the width (in pixels) of the displayed string }
+VAR P,X1 : Integer;
+BEGIN
+  X1 := Length (St) - 1;
+  FOR P := 1 TO Length (St) DO
+    X1 := X1 + Icons._Letter [St [P]] [1];
+  SizeStr := X1;
+END;
+
+PROCEDURE PutStr (X,Y : Integer; St : String255);
+{ the generic routine to display the string }
+VAR P,X1 : Integer;
+BEGIN
+  X1 := X;
+  FOR P := 1 TO Length (St) DO
+    BEGIN
+      Put (Icons._Letter [St [P]],X1,Y);
+      X1 := X1 + Icons._Letter [St [P]] [1] + 1;
+    END;
+END;
+
+TYPE Justification = (Left_,Center_,Right_);
+
+PROCEDURE DisplayString (St : String255; X,Y,FG,BG : Integer;
+                         Just : Justification);
+{ This procedure enables the strings to be displayed in color, and can be justified in either of three ways }
+VAR L,X1 : Integer;
+BEGIN
+  L := SizeStr (St);
+  CASE Just OF
+    Left_ : X1 := X;
+    Center_ : X1 := X - (L + 1) DIV 2;
+    Right_ : X1 := X - L + 1;
+  END;
+  ColorTable (BG,FG,FG,FG);
+  PutStr (X1,Y,St);
+  ColorTable (0,1,2,3);
+END;
+
+PROCEDURE BoxString (St : String255; X,Y,FG,BG,BG2 : Integer;
+                     Just : Justification; Spread : Integer);
+{ This procedure allows the strings to be put inside my "HalfToneBox."  The Spread parameter
+  is the same thing as in procedure HalfToneBox. }
+VAR L,X1,S : Integer;
+BEGIN
+  L := SizeStr (St);
+  CASE Just OF
+    Left_ : X1 := X + Spread + 2;
+    Center_ : X1 := X - (L + 1) DIV 2;
+    Right_ : X1 := X - L - Spread - 1;
+  END;
+  HalfToneBox (X1-Spread-2,Y,X1+L+Spread+1,Y+11+Spread*2,BG,BG2,Spread);
+  ColorTable (BG,1,2,FG); PutStr (X1,Y+Spread+1,St); ColorTable (0,1,2,3);
+END;
+
+PROCEDURE Fade (Color : Byte; Seed : Integer);
+{ A nifty version of FillScreen.  It kind of "fades."  Seed is important if you can understand
+  assembly language, but it can be an odd number between 1 and 16,383. }
+VAR Speed : Integer;
+BEGIN
+  Speed := Configuration.FadeSpeed + 1;
+  inline ($8B/$9E/Seed/    (*     mov bx,Seed [bp]       *)
+          $80/$CB/$01/     (*     or bl,1                *)
+          $8A/$86/Color/   (*     mov al,Color [bp]      *)
+          $24/$03/         (*     and al,3               *)
+          $88/$C4/         (*     mov ah,al              *)
+          $B1/$02/         (*     mov cl,2               *)
+          $D2/$E4/         (*     shl ah,cl              *)
+          $08/$E0/         (*     or al,ah               *)
+          $88/$C4/         (*     mov ah,al              *)
+          $B1/$04/         (*     mov cl,4               *)
+          $D2/$E4/         (*     shl ah,cl              *)
+          $08/$E0/         (*     or al,ah               *)
+          $1E/             (*     push ds                *)
+          $BA/>$B800/      (*     mov dx,0B800h          *)
+          $8E/$DA/         (*     mov ds,dx              *)
+          $B9/>16384/      (*     mov cx,16384 (decimal) *)
+          $31/$F6/         (*     xor si,si              *)
+          $88/$04/         (* l1: mov byte ptr [si],al   *)
+          $01/$DE/         (*     add si,bx              *)
+          $81/$E6/>$3FFF/  (*     and si,03FFFh          *)
+          $51/             (*     push cx                *)
+          $8B/$8E/Speed/   (*     mov cx,Speed [BP]      *)
+          $E2/$FE/         (* l2: loop l2                *)
+          $59/             (*     pop cx                 *)
+          $E2/$EE/         (*     loop l1                *)
+          $1F              (*     pop ds                 *)
+          );
+END;
+
+PROCEDURE FadeGraphics (FileName : String255; Seed : Integer);
+{ A version of procedure LoadScreen that produces the same effect as procedure Fade }
+type
+  bufferptr = ^buffertype;
+  buffertype = array [1..2,1..8192] of byte;
+var
+  buffer : bufferptr;
+  datafile : file;
+  speed : integer;
+BEGIN
+  Speed := Configuration.FadeSpeed + 1;
+  new (buffer);
+  fillchar (buffer^,sizeof(buffertype),0);
+  assign (datafile,filename);
+  reset (datafile,8000);
+  blockread (datafile,buffer^[1],1);
+  blockread (datafile,buffer^[2],1);
+  close (datafile);
+  inline ($1E/             (*     push ds                *)
+          $BA/>$B800/      (*     mov dx,0B800h          *)
+          $8E/$DA/         (*     mov ds,dx              *)
+          $8B/$96/Seed/    (*     mov dx,[bp+SEED]       *)
+          $80/$CA/$01/     (*     or dl,1                *)
+          $B9/>16384/      (*     mov cx,16384 (decimal) *)
+          $C4/$9E/Buffer/  (*     les bx,[bp+BUFFER]     *)
+          $31/$F6/         (*     xor si,si              *)
+          $26/$8A/$00/     (* L1: mov al,es:[bx+si]      *)
+          $88/$04/         (*     mov [si],al            *)
+          $01/$D6/         (*     add si,dx              *)
+          $81/$E6/>$3FFF/  (*     and si,03FFFh          *)
+          $51/             (*     push cx                *)
+          $8B/$8E/Speed/   (*     mov cx,Speed [BP]      *)
+          $E2/$FE/         (* l2: loop l2                *)
+          $59/             (*     pop cx                 *)
+          $E2/$EB/         (*     loop L1                *)
+          $1F              (*     pop ds                 *)
+          );
+  dispose (buffer);
+END;
+
+PROCEDURE FadeScreen (Color : Byte);
+{ This procedure calls procedure Fade using a randomly generated seed }
+BEGIN
+  Fade (Color, Random (16380) + 2);
+END;
+
+PROCEDURE LoadScreenWithFade (FileName : String255);
+{ This procedure calls procedure FadeGraphics using a randomly generated seed }
+BEGIN
+  FadeGraphics (FileName,Random (16380) + 2);
+END;
+
+PROCEDURE TurnClearScreen (X1,Y1,X2,Y2,Color : Integer; VAR Buf);
+{ Clears a portion of the screen in a unique way.  It's a "rotation about the X axis in a 3-D
+  perspective" effect.  The rightmost two bits of X1 and X2 will be zeroed, and therefore the
+  two values will be multiples of four.
+
+  (2,100) to (318,199)   translates to   (0,100) to (319,199)
+
+  The calling procedure/program must have its own array with which to do processing:
+
+  Size of Buf array = Abs (Y2-Y1+2) * Abs (X2 DIV 4 - X1 DIV 4 + 1)
+
+  The values in the array below were computed using the cosines of
+  angles from 0ø to 270ø in increments of 10ø. }
+CONST
+  Divisor = 100; ArraySize = 28;
+  Size : ARRAY [1..ArraySize] OF Integer =
+    (100,98,94,87,77,64,50,34,17,0,-17,-34,-50,-64,-77,-87,-94,-98,-100,
+     -98,-94,-87,-77,-64,-50,-34,-17,0);
+TYPE Array16K = ARRAY [0..16383] OF Byte;
+VAR
+  Screen : ARRAY [0..16383] OF Byte ABSOLUTE $B800:$0000;
+  GraphicsRow : Array16K ABSOLUTE Buf;
+  L,SL,P,A1,A2 : Integer;
+  Center : Integer;
+BEGIN
+  Order (X1,X2); Order (Y1,Y2);
+  X1 := X1 DIV 4; X2 := X2 DIV 4;
+  Center := (Y1 + Y2);
+  FillChar (GraphicsRow [(Y2-Y1+1) * (X2-X1+1)],(X2-X1+1),(Color AND 3)*85);
+  FOR L := Y1 TO Y2 DO
+    BEGIN
+      A1 := X1 + (((L AND 1) SHL 13) OR ((L SHR 1) * 80));
+      A2 := (L - Y1) * (X2 - X1 + 1);
+      Move (Screen [A1],GraphicsRow [A2],X2-X1+1);
+    END;
+  FOR P := 1 TO ArraySize DO
+    BEGIN
+      IF Size [P] = 0
+        THEN
+          FOR L := Y1 TO Y2 DO
+            BEGIN
+              A1 := X1 + (((L AND 1) SHL 13) OR ((L SHR 1) * 80));
+              A2 := (Y2 - Y1 + 1) * (X2 - X1 + 1);
+              Move (GraphicsRow [A2],Screen [A1],X2-X1+1);
+            END
+        ELSE
+          FOR L := Y1 TO Y2 DO
+            BEGIN
+              SL := (((L * 2 - Center) * Divisor) DIV Size [P]) + Center;
+              SL := SL DIV 2;
+              IF (SL < Y1) OR (SL > Y2) THEN SL := Y2 + 1;
+              A1 := X1 + (((L AND 1) SHL 13) OR ((L SHR 1) * 80));
+              A2 := (SL - Y1) * (X2 - X1 + 1);
+              Move (GraphicsRow [A2],Screen [A1],X2-X1+1);
+            END;
+    END;
+END;
+
+procedure box3D (x1,y1,x2,y2,color1,color2,size,curve : integer);
+
+{ a routine I developed to draw a three-dimensional-looking box using Color1 for the top and
+  left edges of the box and Color2 for the bottom and right edges of the box.  Size is the
+  thickness of the box, and Curve is the size of a mere diagonal line.
+       _________
+      /         \   The diagonal lines on this box shown here are of size Curve.
+     |           |
+     |           |
+      \_________/   }
+
+var a : integer;
+begin
+  order (x1,x2); order (y1,y2);
+  for a := 0 to size - 1 do
+    begin
+      draw (x1+a,y1+a+curve,x1+a,y2-a-curve,color1); (* left edge *)
+      draw (x2-a,y1+a+curve,x2-a,y2-a-curve,color2); (* right edge *)
+      draw (x1+a+curve,y1+a,x2-a-curve,y1+a,color1); (* top edge *)
+      draw (x1+a+curve,y2-a,x2-a-curve,y2-a,color2); (* bottom edge *)
+      if not (curve = 0) then
+        begin
+          draw (x1+a+curve-1,y1+a+1,x1+a+1,y1+a+curve-1,color1); { upper left }
+          draw (x1+a+curve-1,y2-a-1,x1+a+1,y2-a-curve+1,color2); { lower left }
+          draw (x2-a-curve+1,y1+a+1,x2-a-1,y1+a+curve-1,color1); { upper right}
+          draw (x2-a-curve+1,y2-a-1,x2-a-1,y2-a-curve+1,color2); { lower right}
+          if not (a = size - 1) then
+            begin
+              draw (x1+a+curve,y1+a+1,x1+a+1,y1+a+curve,color1); { upper left }
+              draw (x1+a+curve,y2-a-1,x1+a+1,y2-a-curve,color2); { lower left }
+              draw (x2-a-curve,y1+a+1,x2-a-1,y1+a+curve,color1); { upper right}
+              draw (x2-a-curve,y2-a-1,x2-a-1,y2-a-curve,color2); { lower right}
+            end;
+        end;
+    end;
+end;
+
+PROCEDURE LoadIcons;
+{ procedure to load the images from a data file }
+VAR F : File;
+BEGIN
+  Assign (F,IconsScreenFile); Reset (F,1);
+  IF IOresult = 0
+    THEN BlockRead (F,Icons,SizeOf(Icons))
+    ELSE
+      BEGIN
+        TextMode (C80);
+        Writeln ('File not found:  '+IconsScreenFile);
+        Halt;
+      END;
+  Close (F);
+END;
+
+

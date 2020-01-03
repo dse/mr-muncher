@@ -1,0 +1,78 @@
+(***********************************************************************************************
+
+(*  INPUT.P -- by Darren Embry -- Sunday, May 26, 1991
+    This file contains the string and number input functions for EDITOR.P and GAME.P  *)
+
+procedure inputstring (var st : string30; x,y,maxxsize,maxlen,color,bg : integer);
+{ procedure to input a string using my standard text display functions }
+var p,x1 : integer; ch : char;
+begin
+  st := ''; x1 := x;
+  repeat
+  { display cursor }
+    draw (x1,y,x1,y+9,bg xor 1); repeat until keypressed; draw (x1,y,x1,y+9,bg);
+  { if key read is null then ignore extended code. }
+    ch := readkey;
+    if ch = #0 then begin ch := readkey; ch := #0; end;
+    if ch in [#32..#126] then { standard ASCII character }
+      if (length (st+ch) <= maxlen) and (sizestr (st+ch) <= maxxsize) then
+        begin
+          st := st + ch; displaystring (ch,x1,y,color,bg,left_);
+          x1 := x1 + 1 + sizestr (ch);
+        end;
+    if ch = #8 then { backspace }
+      if (length (st) >= 1) then
+        begin
+          ch := st [length (st)];
+          if length (st) = 1 then st := '' else st := copy (st,1,length (st) - 1);
+          x1 := x1 - 1 - sizestr (ch); displaystring (ch,x1,y,bg,bg,left_);
+        end;
+  until ch = #13; { carriage return }
+end;
+
+procedure inputnumber (var n : integer; min,max,gx,gy,gx1,gy1,fg,bg,fg2 : integer);
+{ procedure for user to input number:
+
+           n = number input from user.  Default integer can be put in here.
+               On exit, blank line --> the value is not changed
+                   Esc key pressed --> the value becomes -1
+     min,max = range of number.
+       gx,gy = upper left hand graphics coordinates of input window
+     gx1,gy1 = lower right hand graphics coordinates of input window
+          fg = color of the text typed in by user.
+          bg = background color of the input window.
+         fg2 = when no number has been typed in, the default value is displayed
+               in parenthesis in this color.
+
+     This procedure used numeric characters, the backspace key, the Esc key,
+     and the Enter key when done. }
+var nn,p,v : integer; ch : char;
+
+  procedure displaynumber;
+  var st : string [8]; c : integer;
+  begin
+    c := fg;
+    if nn = 0
+      then begin str (n,st); st := '('+st+')'; c := fg2; end
+      else str (nn,st);
+    fillregion (gx,gy,gx1,gy1,bg); displaystring (st,gx,gy,c,bg,left_);
+  end;
+
+begin { procedure inputnumber }
+  nn := 0; displaynumber;
+  repeat
+    ch := readkey;
+    case ch of
+      '0'..'9' : begin
+                   v := ord (ch) - ord ('0'); p := nn * 10 + v;
+                   if (p >= min) and (p <= max) then begin nn := p; displaynumber; end;
+                 end;
+            #8 : if not (nn = 0) then begin nn := nn div 10; displaynumber; end;
+           #27 : begin n := -1; nn := 0; end;
+           #13 : if not (nn = 0) then n := nn;
+    end;
+  until ch in [#27,#13];
+  displaynumber;
+end { procedure inputnumber } ;
+
+

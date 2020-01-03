@@ -1,0 +1,522 @@
+(*********************************************************************************************)
+
+(*  EDITOR.P -- by Darren Embry -- Wednesday, July 31, 1991
+    Source code for the board editor portion of MR. Muncher.  *)
+
+procedure boardeditor;
+
+type
+  whattodo = (yes,no,skip);
+    { used for what the user responds to a message:
+       yes = go on and do the appropriate job
+        no = don't do the appropriate job, but continue
+      skip = don't do the appropriate job, return to board editor }
+  querytype = (save,overwrite,clear);
+    { used to tell a generic procedure what type of yes or no question to ask
+      the user:
+           save = "Save board XX to disk (Y/N)?"
+      overwrite = "Overwrite board XX (Y/N)?"
+          clear = "Clear board XX (Y/N)?" }
+
+const
+{ coordinates for upper-left-hand corner of board }
+  upperleftx = 113; upperlefty = 17;
+var
+{ data for current board being edited }
+  boarddata : boardtype;
+{ reply read from user, dealing with yes-or-no question }
+  option : whattodo;
+{ have changes been made to the current board }
+  changesmade : boolean;
+{ current cursor coordinates, and current board number being edited }
+  cx,cy,board : integer;
+{ character read from keyboard }
+  ch : char;
+{ tells whether to re-display the "editing board" message after an error message appears }
+  redisplay : boolean;
+{ if message on top line has been changed }
+  editmessage : boolean;
+
+{ these two functions convert from board cursor coordinates (1-25,1-22) to graphics screen
+  coordinates }
+function gx (cx : integer) : integer; begin gx := upperleftx + (cx - 1) * 8; end;
+function gy (cy : integer) : integer; begin gy := upperlefty + (cy - 1) * 8; end;
+
+procedure displayboardpart (x,y : integer);
+{ display one image of the board, board coordinates given }
+var l,r,u,d : boolean;
+begin
+  l := (boarddata [px(x),y] = __wall);
+  r := (boarddata [nx(x),y] = __wall);
+  u := (boarddata [x,py(y)] = __wall);
+  d := (boarddata [x,ny(y)] = __wall);
+  with icons do
+    begin
+      case boarddata [x,y] of
+        __eraser : fillregion (gx(x),gy(y),gx(x)+7,gy(y)+7,0);
+        __player : put (_creature [right,1],gx(x),gy(y));
+         __enemy : put (_ghost [dangerous],gx(x),gy(y));
+           __dot : put (_dot,gx(x),gy(y));
+        __energy : put (_energizer,gx(x),gy(y));
+          __wall : put (_wall [l,r,u,d],gx(x),gy(y));
+      end;
+    end;
+end;
+
+procedure displayboard; var x,y : integer;
+{ display current board on board editor screen }
+begin for x := 1 to columns do for y := 1 to rows do displayboardpart (x,y); end;
+
+function boardeditingmessage : string255;
+{ string that simplifies displaying "Editing board ###" on the top line }
+var st : string [3];
+begin
+  str (board,st);
+  boardeditingmessage := 'Editing board ' + st;
+end;
+
+procedure toplinemessage (st : string255; c : integer);
+{ puts a message on the top line of the board editor screen, color given }
+begin
+  fillregion (upperleftx-7,0,319,9,0);
+  displaystring (st,(upperleftx+313) div 2,0,c,0,center_);
+  editmessage := not (st = boardeditingmessage);
+  if st = boardeditingmessage then redisplay := false;
+end;
+
+function exist (board : integer) : boolean;
+{ does a file exist for a given board number? }
+var f : file;
+begin
+  assign (f,boardfile(board));
+  reset (f);
+  exist := (ioresult = 0);
+  close (f);
+end;
+
+type string12 = string [12];
+
+procedure _save (board : integer);
+{ raw procedure to write a given board number to disk }
+var f : file;
+begin
+  assign (f,boardfile (board));
+  rewrite (f,sizeof (boarddata));
+  blockwrite (f,boarddata,1);
+  close (f);
+  changesmade := false;
+end;
+
+var loaded : boolean;
+
+procedure _load (board : integer);
+{ raw procedure to load a given board number from disk }
+var f : file;
+begin
+  if not loaded then
+    begin
+      assign (f,boardfile (board));
+      reset (f,sizeof (boarddata));
+      if (ioresult = 0)
+        then blockread (f,boarddata,1)
+        else fillchar (boarddata,sizeof (boarddata),__eraser);
+      close (f);
+    end;
+  assign (f,boardfile (board));
+  reset (f,sizeof (boarddata));
+  loaded := (ioresult = 0);
+  if loaded
+    then blockread (f,boarddata,1)
+    else fillchar (boarddata,sizeof (boarddata),__eraser);
+  close (f);
+  changesmade := false;
+end;
+
+procedure queryto (query : querytype; var option : whattodo);
+{ general query procedure -- display the query message, and input Y, N, or Esc from the
+  keyboard.  Type of question is given in QUERY parameter. }
+var ch : char; st : string [40];
+begin
+  str (board,st);
+  case query of
+         save : st := 'Save board ' + st + ' to disk';
+    overwrite : st := 'Overwrite board ' + st;
+        clear : st := 'Clear board ' + st;
+  end;
+  toplinemessage (st + ' (Y/N)?',1);
+  repeat
+    ch := readkey; ch := upcase (ch);
+  until ch in ['Y','N',#27];
+  case ch of
+    'N' : option := no;
+    'Y' : option := yes;
+    #27 : option := skip;
+  end;
+end;
+
+procedure saveboard;
+{ procedure called from board editor to save current game board }
+const
+  prompt = 'Save under board number:  ';
+var
+  oldboard : integer;
+  tempdata : boardtype;
+  b        : integer;
+  option   : whattodo;
+begin
+  oldboard := board; b := board;
+  toplinemessage ('',1);
+  displaystring (prompt,upperleftx,0,3,0,left_);
+  inputnumber (b,1,maximumboards,upperleftx+sizestr(prompt),0,319,9,1,0,2);
+  if b = -1 then exit;
+  move (boarddata,tempdata,sizeof(boarddata)); board := b;
+  option := yes;
+  if exist (board) and changesmade then
+    begin
+      _load (board);
+      displayboard;
+      queryto (overwrite,option);
+    end;
+  case option of
+     yes : begin
+             move (tempdata,boarddata,sizeof(boarddata));
+             displayboard;
+             _save (board);
+           end;
+    skip : begin
+             move (tempdata,boarddata,sizeof(boarddata));
+             board := oldboard;
+             displayboard;
+           end;
+  end;
+end;
+
+{ -- raw procedure to save the board if "Y" is pressed at the
+     "Save board (Y/N)?" prompt -- }
+
+procedure saveboardonquery (query : querytype; var option : whattodo);
+begin
+  option := no;
+  if changesmade then
+    queryto (query,option);
+  if option = yes then _save (board);
+end;
+
+{ -- procedure called from board editor to load a game board from disk -- }
+
+procedure loadboard;
+const
+  prompt = 'Load board number:  ';
+var
+  b : integer;
+begin
+  saveboardonquery (save,option); if option = skip then exit;
+  toplinemessage ('',3); displaystring (prompt,upperleftx,0,3,0,left_);
+  b := board; inputnumber (b,1,maximumboards,upperleftx+sizestr(prompt),0,319,9,1,0,2);
+  if b = -1 then exit else board := b;
+  _load (board); displayboard;
+end;
+
+procedure renamefile (oldfile,newfile : string255);
+{ changes the name of a single file }
+var
+  regs : registers;
+  oldf,newf : string255;
+begin
+  oldf := oldfile + #0;     { turn filenames into ASCIIZ strings (ASCII 0 at end of string) }
+  newf := newfile + #0;
+  with regs do
+    begin
+      ds := seg (oldf [1]); { DS:DX points to ASCIIZ string of old filename }
+      dx := ofs (oldf [1]);
+      es := seg (newf [1]); { ES:DI points to ASCIIZ string of new filename }
+      di := ofs (newf [1]);
+      ah := $56;            { AH = $56, DOS function number for RENAME FILE }
+      msdos (regs);         { calls DOS function dispatcher (interrupt $21) }
+    end;
+end;
+
+procedure exchangeboards;
+{ procedure called from baord editor to exchange boards }
+const
+  prompt1 = 'Exchange board number:  ';
+  prompt2 = 'With what board number:  ';
+  temp = '%%PIPE%%.$$$';
+var
+  b,b1,b2 : integer; exist1,exist2 : boolean;
+begin
+  toplinemessage ('',3); displaystring (prompt1,upperleftx,0,3,0,left_);
+  b1 := board; inputnumber (b1,1,maximumboards,upperleftx+sizestr(prompt1),0,319,9,1,0,2);
+  if b1 = -1 then exit;
+  toplinemessage ('',3); displaystring (prompt2,upperleftx,0,3,0,left_);
+  b2 := board; inputnumber (b2,1,maximumboards,upperleftx+sizestr(prompt2),0,319,9,1,0,2);
+  if (b2 = -1) or (b2 = b1) then exit;
+  toplinemessage ('',3);
+  exist1 := exist (b1); exist2 := exist (b2);
+  if exist1 and exist2
+    then
+      begin
+        renamefile (boardfile (b1),temp);
+        renamefile (boardfile (b2),boardfile (b1));
+        renamefile (temp,boardfile (b2));
+      end
+    else if exist1
+      then renamefile (boardfile (b1),boardfile (b2))
+    else if exist2
+      then renamefile (boardfile (b2),boardfile (b1));
+  if ((board = b1) or (board = b2)) and (exist1 or exist2) then
+    begin
+      _load (board);
+      displayboard;
+    end;
+end;
+
+procedure clearboard;
+{ procedure called from board editor to erase the current game board }
+var option : whattodo;
+begin
+  queryto (clear,option);
+  if option = yes then
+    begin
+      fillchar (boarddata,sizeof(boarddata),__eraser);
+      displayboard;
+      changesmade := true;
+    end;
+end;
+
+{ -- procedures called from board editor to load up the previous and next game boards -- }
+
+procedure previousboard;
+var option : whattodo;
+begin
+  if changesmade then
+    begin
+      queryto (save,option);
+      if option = yes then _save (board);
+      if option = skip then exit;
+    end;
+  if board = 1
+    then board := maximumboards
+    else board := board - 1;
+  _load (board);
+  displayboard;
+  editmessage := true;
+end;
+
+procedure nextboard;
+var option : whattodo;
+begin
+  if changesmade then
+    begin
+      queryto (save,option);
+      if option = yes then _save (board);
+      if option = skip then exit;
+    end;
+  if board = maximumboards
+    then board := 1
+    else board := board + 1;
+  _load (board);
+  displayboard;
+  editmessage := true;
+end;
+
+{ -- procedures called from board editor to change the cursor position -- }
+procedure cursorleft;   begin cx := px (cx); end;
+procedure cursorright;  begin cx := nx (cx); end;
+procedure cursorup;     begin cy := py (cy); end;
+procedure cursordown;   begin cy := ny (cy); end;
+
+procedure readreply (var reply : whattodo);
+{ inputs a (Y)es or (N)o reply.  When "Esc" is pressed, counts as No. }
+var ch : char;
+begin
+  repeat
+    ch := readkey; ch := upcase (ch);
+  until ch in [#27,'N','Y'];
+  case ch of
+    #27 : reply := no;
+    'N' : reply := no;
+    'Y' : reply := yes;
+  end;
+end;
+
+procedure eraseat (x,y : integer);
+{ erases at given board editor cursor coordinates.  Changes the graphics screen. }
+var b : byte;
+begin
+  b := boarddata [x,y];
+  boarddata [x,y] := __eraser;
+  if b = __wall then
+    begin
+      displayboardpart (px(x),y);
+      displayboardpart (nx(x),y);
+      displayboardpart (x,py(y));
+      displayboardpart (x,ny(y));
+    end;
+  displayboardpart (x,y);
+  changesmade := true;
+end;
+
+function numberof (__icon : byte) : integer;
+{ tells how many occurences of a certain __icon there are }
+var n,x,y : integer;
+begin
+  n := 0;
+  for x := 1 to columns do for y := 1 to rows do
+    if boarddata [x,y] = __icon
+      then n := n + 1;
+  numberof := n;
+end;
+
+{ -- the procedures below are used to put a player, an enemy, a food pellet
+     (dot), an energy pellet, eraser, or a wall section, respectively. -- }
+
+procedure player;
+var reply : whattodo; x,y : integer;
+begin
+  reply := yes;
+  if numberof (__player) = 1 then
+    begin
+      toplinemessage ('Only one allowed. Move it (Y/N)?',1);
+      readreply (reply);
+      if reply = yes then
+        for x := 1 to columns do for y := 1 to rows do
+          if boarddata [x,y] = __player then eraseat (x,y);
+    end;
+  if reply = yes then
+    begin
+      eraseat (cx,cy);
+      boarddata [cx,cy] := __player;
+      displayboardpart (cx,cy);
+      changesmade := true;
+    end;
+end;
+
+const
+  max_enemies = 10;
+
+procedure enemy;
+var st : string [3];
+begin
+  if numberof (__enemy) >= max_enemies
+    then
+      begin
+        str (max_enemies,st);
+        toplinemessage ('Maximum of ' + st + ' enemy allowed.',1);
+        redisplay := true;
+        editmessage := false;
+      end
+    else
+      begin
+        eraseat (cx,cy);
+        boarddata [cx,cy] := __enemy;
+        displayboardpart (cx,cy);
+        changesmade := true;
+      end;
+end;
+
+procedure dot;
+begin
+  eraseat (cx,cy);
+  boarddata [cx,cy] := __dot;
+  displayboardpart (cx,cy);
+  changesmade := true;
+end;
+
+procedure energy;
+begin
+  eraseat (cx,cy);
+  boarddata [cx,cy] := __energy;
+  displayboardpart (cx,cy);
+  changesmade := true;
+end;
+
+procedure eraser;
+begin
+  eraseat (cx,cy);
+  boarddata [cx,cy] := __eraser;
+  displayboardpart (cx,cy);
+  changesmade := true;
+end;
+
+procedure wall;
+begin
+  boarddata [cx,cy] := __wall;
+  displayboardpart (px(cx),cy);
+  displayboardpart (nx(cx),cy);
+  displayboardpart (cx,py(cy));
+  displayboardpart (cx,ny(cy));
+  displayboardpart (cx,cy);
+  changesmade := true;
+end;
+
+procedure blinkingcursor;
+{ blinking cursor until a key is pressed }
+var
+  whatwasthere : icon8;
+  t : integer;
+begin
+  get (whatwasthere,gx(cx),gy(cy),gx(cx)+7,gy(cy)+7);
+  t := 0;
+  repeat
+    if t = 0 then fillregion (gx(cx),gy(cy),gx(cx)+7,gy(cy)+7,1);
+    if t = 10 then put (whatwasthere,gx(cx),gy(cy));
+    delay (25);
+    t := t + 1;
+    if t = 20 then t := 0;
+  until keypressed;
+  t := 0;
+  put (whatwasthere,gx(cx),gy(cy));
+end;
+
+{ -- main program -- }
+
+begin
+  clearscreen;
+  seelines (100);
+  loadscreenwithfade (boardeditorscreenfile);
+  cx := 1; cy := 1; board := 1;
+  _load (1); displayboard;
+  redisplay := false;
+  editmessage := false;
+  toplinemessage (boardeditingmessage,3);
+  repeat
+    blinkingcursor;
+    ch := readkey; ch := upcase (ch);
+    if redisplay then toplinemessage (boardeditingmessage,3);
+    case ch of
+       #0 : begin
+              ch := readkey;
+              case ch of
+                'K' : cursorleft;
+                'M' : cursorright;
+                'H' : cursorup;
+                'P' : cursordown;
+                'I' : previousboard;
+                'Q' : nextboard;
+              end;
+            end;
+      #27 : begin
+              saveboardonquery (save,option);
+              if not (option = skip) then
+                begin
+                  fadescreen (0);
+                  exit;
+                end;
+            end;
+      'S' : saveboard;
+      'L' : loadboard;
+      'C' : clearboard;
+      'X' : exchangeboards;
+      '1' : player;
+      '2' : enemy;
+      '3' : wall;
+      '4' : dot;
+      '5' : energy;
+      '0' : eraser;
+    end;
+    if editmessage then toplinemessage (boardeditingmessage,3);
+  until false;
+end;
+
+

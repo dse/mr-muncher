@@ -1,0 +1,29 @@
+(*********************************************************************************************)
+
+(*  TURBO4.P -- by Darren Embry -- Wednesday, February 13, 1991
+    This file contains a few things required so that programs do not have to be changed from
+    version 3.0 to 4.0, and vice versa.  *)
+
+{ -- stores the values of the CPU registers, used by Intr and MsDos -- }
+TYPE
+  Word = Integer;
+  Registers = RECORD CASE Byte OF
+                1 : (AX,BX,CX,DX,BP,SI,DI,DS,ES,Flags : Integer);
+                2 : (AL,AH,BL,BH,CL,CH,DL,DH : Byte);
+              END;
+
+{ -- Settles the differences between the following two:
+
+     Read (KBD,Ch)  in Turbo Pascal 3.0
+     Ch := ReadKey  in Turbo Pascal 4.0 and above -- }
+
+FUNCTION ReadKey : Char;
+VAR Ch : Char;
+BEGIN
+  Read (KBD,Ch);
+  IF (Ch = #27) AND KeyPressed
+    THEN Ch := #0;
+  ReadKey := Ch;
+END;
+
+

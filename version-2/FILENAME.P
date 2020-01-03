@@ -1,0 +1,29 @@
+(*********************************************************************************************)
+
+{   FILENAME.P -- by Darren Embry -- Wednesday, February 13, 1991
+
+    This file contains the filenames for all the data files used by MUNCHER.PAS and set up by
+    MAKER and MAKER2.PAS.  }
+
+CONST
+{ data file that contains all the little GetPic/PutPic images }
+  IconsScreenFile = 'MIMAGES.CGA';
+{ introduction graphics ("EmbryWare Enterprises Presents...") }
+  IntroductionScreenFile = 'MINTRO.CGA';
+{ screen displaying the main menu options }
+  MainMenuScreenFile = 'MMENU.CGA';
+{ the help screen available from the main menu }
+  InstructionsScreenFile = 'MHELP.CGA';
+{ the file containing the ACTUAL DATA for the high scores }
+	HighScoresDataFile = 'MSCORES.DAT';
+	BoardEditorScreenFile = 'MEDITOR.CGA';
+	HighScoresScreenFile = 'MSCORES.CGA';
+  ExitToDOSScreenFile = 'MEXIT.CGA';
+{ filename for each board's data; the extension is a 3-digit number filled in by the program }
+  BoardFileName = 'MBOARD';
+{ prepared game playing environment screen }
+  GameScreenFile = 'MGAME.CGA';
+{ configuration data file }
+  ConfigurationFile = 'MCONFIG.DAT';
+
+
