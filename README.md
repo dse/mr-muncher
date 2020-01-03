@@ -15,3 +15,12 @@ which was a text-mode horror.
 
 The `version-2` directory contains the second version of the game,
 which was a CGA shitshow with a bunch of shit that was goofy as fuck.
+
+# License
+
+This game was shareware.  I made $0.00 and got one snail mail response
+a few years later, which I never opened it out of anxiety.  :-(
+
+This game is [MIT licensed](LICENSE.md) now.
+
+Have fun.  Or don't.
